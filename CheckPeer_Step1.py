@@ -1,6 +1,7 @@
 # Copyright (c) 2022 Arista Networks, Inc.
 # Use of this source code is governed by the Apache License 2.0
 # that can be found in the COPYING file.
+import re
 
 cmds = ["enable", "show mlag", "show lldp neighbors", "show ip bgp neighbors", "show interfaces status"]
 commands = ctx.runDeviceCmds(cmds, fmt="json")
@@ -20,8 +21,14 @@ bgpRouterIDs = []
 intfStatusRaw = commands[4]["response"]["interfaceStatuses"]
 intfParsed = []
 for interface in intfStatusRaw:
-    if interface.startswith("Ethernet"):
-      intfParsed.append({interface:intfStatusRaw[interface]["linkStatus"]})
+    multiLaneIntf = r'Ethernet[0-9]{1}\/|Ethernet1[0-9]{1}\/|Ethernet20\/'
+    singleLaneIntf = r'Ethernet[0-9]{1}$|Ethernet1[0-9]{1}$|Ethernet20$'
+    if re.search(multiLaneIntf,interface):
+      if intfStatusRaw[interface]["linkStatus"] == 'connected':
+        intfParsed.append(interface)
+    elif re.search(singleLaneIntf,interface):
+      if intfStatusRaw[interface]["linkStatus"] == 'connected':
+        intfParsed.append(interface)
 for peer in bgpRaw:
     if peer["routerId"] == "0.0.0.0":
       pass
