@@ -44,19 +44,19 @@ if bgpLocalRouterID != '0.0.0.0':
   if mlagDomain != 'spineTemp':
     bgpRouterIDs.append(bgpLocalRouterID)
 result = {"mlag": mlagState, "lldp": lldpPairs, "bgp": bgpRouterIDs, "intfStatus": intfParsed}
-#PeerResult = ctx.retrieve(path=['compliance'],customKey=mlagDomain)
-PeerResult = ctx.retrieve(path=['compliance'],customKey=mlagDomain,delete=False)
+PeerResult = ctx.retrieve(path=['compliance'],customKey=mlagDomain)
+#PeerResult = ctx.retrieve(path=['compliance'],customKey=mlagDomain,delete=False)
 if not PeerResult:
   raise ActionFailed(f"Peer result for {mlagDomain} not found")
 lldpCheck = set(result['lldp']) == set(PeerResult['lldp'])
 if not lldpCheck:
-  raise ActionFailed('lldp check failed')
+  raise ActionFailed(f'lldp check failed.\nPeer: {PeerResult['lldp']}\nSelf: {result['lldp']}')
 bgpCheck = set(result['bgp']) == set(PeerResult['bgp'])
 if not bgpCheck:
-  raise ActionFailed('bgp check failed')
+  raise ActionFailed(f'bgp check failed.\nPeer: {PeerResult['bgp']}\nSelf: {result['bgp']}')
 intfCheck = set(result['intfStatus']) == set(PeerResult['intfStatus'])
 if not intfCheck:
-  raise ActionFailed('interface check failed')
+  raise ActionFailed(f'interface check failed.\nPeer: {PeerResult['intfStatus']}\nSelf: {result['intfStatus']}')
 
 #ctx.info(f"{PeerResult}")
 ctx.info(f"{'All checks passed.'}")
