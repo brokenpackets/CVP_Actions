@@ -58,6 +58,8 @@ for vrf in bgpRaw:
   for peer in peerList:
       if peer["routerId"] == "0.0.0.0":
         pass
+      elif peer["localAsn"] == peer['asn']:
+        pass
       else:
         pfxReceived = peer['prefixesReceived']
         bgpRouterIDs.append({peer["routerId"]: pfxReceived})
@@ -65,9 +67,9 @@ for vrf in bgpRaw:
         bgpLocalRouterID = peer["localRouterId"]
       elif bgpLocalRouterID == peer["localRouterId"]:
         pass
-  if bgpLocalRouterID != '0.0.0.0':
-    if mlagPeer != 'spineTemp':
-      bgpRouterIDs.append({bgpLocalRouterID: "0"})
+  #if bgpLocalRouterID != '0.0.0.0':
+    #if mlagPeer != 'spineTemp':
+    #  bgpRouterIDs.append({bgpLocalRouterID: "0"})
   vrfRouterIDs.append({"vrf": vrf, "routerIDs": bgpRouterIDs})
 
 result = {"mlag": mlagState, "selfHostname": hostname, "peerHostname": mlagPeer, "lldp": lldpPairs, "bgp": vrfRouterIDs, "intfStatus": intfParsed}
