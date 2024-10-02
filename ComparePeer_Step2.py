@@ -98,9 +98,9 @@ for vrf in bgpRaw:
 selfResult = {"mlag": mlagState, "selfHostname": hostname, "peerHostname": mlagPeer, "lldp": lldpPairs, "bgp": vrfRouterIDs, "intfStatus": intfParsed}
 #PeerResult = ctx.retrieve(path=['compliance'],customKey=hostname)
 #PeerResult = ctx.retrieve(path=['compliance'],customKey=hostname, delete=False)
-PeerResult = json.loads(get_configlet_by_name(server1,hostname)['config'])
-ctx.info(type(PeerResult))
-"""
+PeerResult1 = get_configlet_by_name(server1,hostname)['config']
+PeerResult = json.loads(PeerResult1.replace('\'','\"'))
+
 if not PeerResult:
   raise ActionFailed(f"Peer result for {mlagPeer} not found")
 
@@ -108,13 +108,12 @@ lldpCheck = set(selfResult['lldp']) == set(PeerResult['lldp'])
 if not lldpCheck:
   raise ActionFailed(f'lldp check failed.\nPeer: {PeerResult['lldp']}\nSelf: {result['lldp']}')
 if str(selfResult['bgp']) == str(PeerResult['bgp']):
-  ctx.info('True')
-#else:
-#  raise ActionFailed(f'bgp check failed.\nPeer: {PeerResult['bgp']}\nSelf: {result['bgp']}')
+  pass
+else:
+  raise ActionFailed(f'bgp check failed.\nPeer: {PeerResult['bgp']}\nSelf: {result['bgp']}')
 intfCheck = set(selfResult['intfStatus']) == set(PeerResult['intfStatus'])
 if not intfCheck:
   raise ActionFailed(f'interface check failed.\nPeer: {PeerResult['intfStatus']}\nSelf: {result['intfStatus']}')
 
 #ctx.info(f"{PeerResult}")
 ctx.info(f"{'All checks passed.'}")
-"""
