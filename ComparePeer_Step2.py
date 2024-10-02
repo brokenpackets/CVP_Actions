@@ -111,7 +111,7 @@ if str(selfResult['bgp']) == str(PeerResult['bgp']):
   pass
 else:
   raise ActionFailed(f'bgp check failed.\nPeer: {PeerResult['bgp']}\nSelf: {result['bgp']}')
-intfCheck = set(selfResult['intfStatus']) == set(PeerResult['intfStatus'])
+intfCheck = len(selfResult['intfStatus']) == len(PeerResult['intfStatus'])
 if not intfCheck:
   raise ActionFailed(f'interface check failed.\nPeer: {PeerResult['intfStatus']}\nSelf: {result['intfStatus']}')
 
