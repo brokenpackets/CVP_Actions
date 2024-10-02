@@ -41,7 +41,10 @@ for intf in lldpRaw:
 if peerHostname == 'xxxxxxxx':
   mlagPeer = 'spineTemp'
 else:
-  mlagPeer = peerHostname
+  try:
+    mlagPeer = peerHostname.split('.')[0]
+  except:
+    mlagPeer = peerHostname
 intfStatusRaw = commands[4]["response"]["interfaceStatuses"]
 intfParsed = []
 for interface in intfStatusRaw:
