@@ -3,6 +3,11 @@
 # that can be found in the COPYING file.
 import re
 
+###### User Variables
+api_token = '' ### CVP Service Token Goes Here
+server1 = 'https://www.cv-prod-na-northeast1-b.arista.io' ## CVP URL Goes here
+######
+
 cmds = ["enable", "show mlag detail", "show lldp neighbors detail", "show ip bgp neighbors vrf all", "show interfaces status", "show hostname"]
 commands = ctx.runDeviceCmds(cmds, fmt="json")
 mlagRaw = commands[1]["response"]
@@ -73,5 +78,47 @@ for vrf in bgpRaw:
   vrfRouterIDs.append({"vrf": vrf, "routerIDs": bgpRouterIDs})
 
 result = {"mlag": mlagState, "selfHostname": hostname, "peerHostname": mlagPeer, "lldp": lldpPairs, "bgp": vrfRouterIDs, "intfStatus": intfParsed}
+##ctx.info(f"{result}")
+##ctx.store(result,path=['compliance'],customKey=mlagPeer)
+
+### Shim to work on 2023.1.3
+
+#!/usr/bin/env python
+import requests
+import json
+
+requests.packages.urllib3.disable_warnings()
+session = requests.Session()
+session.headers['Authorization'] = f"Bearer {api_token}"
+def get_configlet_by_name(url_prefix,configlet_name):
+  response = session.get(url_prefix+'/cvpservice/configlet/getConfigletByName.do?name='+configlet_name)
+  return response.json()
+
+def update_configlet(url_prefix,configlet_key,configlet_name,configlet_body):
+  tempData = json.dumps({
+  "config": configlet_body,
+  "key": configlet_key,
+  "name": configlet_name,
+  "reconciled": False,
+  "waitForTaskIds": False
+  })
+  response = session.post(url_prefix+'/cvpservice/configlet/updateConfiglet.do', data=tempData)
+  #return tempData
+  return response.json()
+
+def add_configlet(url_prefix,configlet_name,configlet_body):
+  tempData = json.dumps({
+          "config": configlet_body,
+          "name": configlet_name
+  })
+  response = session.post(url_prefix+'/cvpservice/configlet/addConfiglet.do', data=tempData)
+  #return tempData
+  return response.json()
+
+configlet_name = mlagPeer
+configlet_body = str(result)
+output = add_configlet(server1,configlet_name,configlet_body)
+if output == {'errorCode': '132518', 'errorMessage': 'Data already exists in Database'}:
+  configlet_key = get_configlet_by_name(server1,mlagPeer)['key']
+  output2 = update_configlet(server1,configlet_key,configlet_name,configlet_body)
 ctx.info(f"{result}")
-ctx.store(result,path=['compliance'],customKey=mlagPeer)
